@@ -9,4 +9,9 @@ const ROLE_DASHBOARD = {
   hr_manager: '/dashboard/hr',
 };
 
-export const getDashboardPath = (role) => ROLE_DASHBOARD[role] || '/dashboard';
+const normalizeRoleKey = (role) => {
+  if (!role) return role;
+  return String(role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+};
+
+export const getDashboardPath = (role) => ROLE_DASHBOARD[normalizeRoleKey(role)] || '/dashboard';

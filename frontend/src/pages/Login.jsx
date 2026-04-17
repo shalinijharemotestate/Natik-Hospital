@@ -5,9 +5,9 @@ import { getDashboardPath } from '../utils/roleRedirect';
 
 const ROLES = [
   { value: 'super_admin', label: 'Super Admin', icon: '🛡️' },
+    { value: 'receptionist', label: 'Receptionist', icon: '🏥' },
   { value: 'doctor', label: 'Doctor', icon: '🩺' },
   { value: 'nurse', label: 'Nurse', icon: '💉' },
-  { value: 'receptionist', label: 'Receptionist', icon: '🏥' },
   { value: 'pharmacist', label: 'Pharmacist', icon: '💊' },
   { value: 'lab_technician', label: 'Lab Technician', icon: '🔬' },
   { value: 'hr_manager', label: 'HR Manager', icon: '👥' },
