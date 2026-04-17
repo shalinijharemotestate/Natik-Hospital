@@ -1,6 +1,11 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const normalizeRoleKey = (role) => {
+  if (!role) return role;
+  return String(role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+};
+
 // Wraps any route that requires login
 // allowedRoles = [] means any logged-in user can access
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
@@ -10,7 +15,9 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+  const userRole = normalizeRoleKey(user?.role);
+  const allowed = allowedRoles.map(normalizeRoleKey);
+  if (allowed.length > 0 && !allowed.includes(userRole)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
