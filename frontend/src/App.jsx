@@ -1,24 +1,83 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ReceptionDashboard from './pages/receptionist/ReceptionDashboard';
+
+const ComingSoon = ({ page }) => (
+  <div className="p-8 flex items-center justify-center h-full">
+    <div className="text-center">
+      <p className="text-4xl mb-3">🚧</p>
+      <h2 className="text-xl font-bold text-gray-700">{page}</h2>
+      <p className="text-gray-400 text-sm mt-1">This module is coming soon</p>
+    </div>
+  </div>
+);
 
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard/*" element={
-          <ProtectedRoute>
-            <Dashboard />
+
+        {/* Admin */}
+        <Route path="/dashboard/admin" element={
+          <ProtectedRoute allowedRoles={['super_admin']}>
+            <Layout><AdminDashboard /></Layout>
           </ProtectedRoute>
         } />
+
+        {/* Receptionist */}
+        <Route path="/dashboard/reception" element={
+          <ProtectedRoute allowedRoles={['receptionist', 'super_admin']}>
+            <Layout><ReceptionDashboard /></Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* Other role dashboards — coming soon */}
+        <Route path="/dashboard/doctor" element={
+          <ProtectedRoute allowedRoles={['doctor', 'super_admin']}>
+            <Layout><ComingSoon page="Doctor Dashboard" /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/nurse" element={
+          <ProtectedRoute allowedRoles={['nurse', 'super_admin']}>
+            <Layout><ComingSoon page="Nurse Dashboard" /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/lab" element={
+          <ProtectedRoute allowedRoles={['lab_technician', 'super_admin']}>
+            <Layout><ComingSoon page="Lab Dashboard" /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/pharmacy" element={
+          <ProtectedRoute allowedRoles={['pharmacist', 'super_admin']}>
+            <Layout><ComingSoon page="Pharmacy Dashboard" /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/hr" element={
+          <ProtectedRoute allowedRoles={['hr_manager', 'super_admin']}>
+            <Layout><ComingSoon page="HR Dashboard" /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/finance" element={
+          <ProtectedRoute allowedRoles={['super_admin']}>
+            <Layout><ComingSoon page="Finance Dashboard" /></Layout>
+          </ProtectedRoute>
+        } />
+
         <Route path="/unauthorized" element={
-          <div className="min-h-screen flex items-center justify-center text-red-600 text-xl font-semibold">
-            403 — Access Denied
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-5xl mb-4">🚫</p>
+              <h2 className="text-2xl font-bold text-gray-700">Access Denied</h2>
+              <p className="text-gray-400 mt-2">You don't have permission to view this page.</p>
+            </div>
           </div>
         } />
+
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </AuthProvider>
