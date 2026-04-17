@@ -238,7 +238,7 @@ export default function Login() {
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">
-            Secure login powered by Natik Hospital HIMS
+            Powered by <span className="font-medium text-gray-500">MythoQuantum Explorers Pvt. Ltd.</span>
           </p>
         </div>
       </div>
