@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminRoutes from './pages/admin/AdminRoutes';
 import ReceptionDashboard from './pages/receptionist/ReceptionDashboard';
 
 const ComingSoon = ({ page }) => (
@@ -23,9 +24,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
 
         {/* Admin */}
-        <Route path="/dashboard/admin" element={
+        <Route path="/dashboard/admin/*" element={
           <ProtectedRoute allowedRoles={['super_admin']}>
-            <Layout><AdminDashboard /></Layout>
+            <Layout><AdminRoutes /></Layout>
           </ProtectedRoute>
         } />
 

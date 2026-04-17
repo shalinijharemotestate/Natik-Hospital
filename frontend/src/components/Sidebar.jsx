@@ -1,6 +1,11 @@
-import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+const normalizeRoleKey = (role) => {
+  if (!role) return role;
+  return String(role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+};
 
 const ROLE_MENUS = {
   super_admin: [
@@ -36,7 +41,7 @@ const ROLE_MENUS = {
       ],
     },
     {
-      label: 'Appointment & OPD', icon: '🗂️', children: [
+      label: 'Appointment & OPD Control', icon: '🗂️', children: [
         { label: 'All Appointments', path: '/dashboard/admin/appointments' },
         { label: 'Book Appointment', path: '/dashboard/admin/appointments/book' },
         { label: 'OPD Records', path: '/dashboard/admin/opd' },
@@ -45,7 +50,7 @@ const ROLE_MENUS = {
       ],
     },
     {
-      label: 'IPD & Admission', icon: '🛏️', children: [
+      label: 'IPD & Admission Control', icon: '🛏️', children: [
         { label: 'Active Admissions', path: '/dashboard/admin/ipd' },
         { label: 'Admit Patient', path: '/dashboard/admin/ipd/admit' },
         { label: 'Transfers Tracking', path: '/dashboard/admin/ipd/transfers' },
@@ -54,7 +59,7 @@ const ROLE_MENUS = {
       ],
     },
     {
-      label: 'Bed & Resource', icon: '🏨', children: [
+      label: 'Bed & Resource Management', icon: '🏨', children: [
         { label: 'Bed Status', path: '/dashboard/admin/beds' },
         { label: 'Add / Edit Beds', path: '/dashboard/admin/beds/manage' },
         { label: 'Allocate / Deallocate', path: '/dashboard/admin/beds/allocate' },
@@ -85,13 +90,6 @@ const ROLE_MENUS = {
         { label: 'Pending Actions', path: '/dashboard/admin/alerts/pending' },
         { label: 'Critical Alerts', path: '/dashboard/admin/alerts/critical' },
         { label: 'System Notifications', path: '/dashboard/admin/alerts/system' },
-      ],
-    },
-    {
-      label: 'System Settings', icon: '⚙️', children: [
-        { label: 'Hospital Information', path: '/dashboard/admin/settings/hospital' },
-        { label: 'Security Settings', path: '/dashboard/admin/settings/security' },
-        { label: 'Profile', path: '/dashboard/admin/settings/profile' },
       ],
     },
   ],
@@ -343,14 +341,19 @@ const ROLE_LABELS = {
   hr_manager: 'HR Manager',
 };
 
-function MenuItem({ item, collapsed }) {
-  const [open, setOpen] = useState(false);
+function MenuItem({ item, collapsed, open, onToggle, onNavigate }) {
+  const activeChild = useMemo(() => item.children.some((c) => window.location.pathname === c.path), [item.children]);
 
   return (
     <div>
       <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-150"
+        type="button"
+        onClick={onToggle}
+        title={collapsed ? item.label : undefined}
+        className={[
+          'w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-150',
+          activeChild ? 'bg-blue-50 text-blue-800' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700',
+        ].join(' ')}
       >
         <span className="text-lg shrink-0">{item.icon}</span>
         {!collapsed && (
@@ -373,8 +376,9 @@ function MenuItem({ item, collapsed }) {
               key={child.path}
               to={child.path}
               end
+              onClick={onNavigate}
               className={({ isActive }) =>
-                `block px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 ${
+                `block px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
                   isActive
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700'
@@ -393,7 +397,20 @@ function MenuItem({ item, collapsed }) {
 export default function Sidebar({ collapsed, setCollapsed }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const menuItems = ROLE_MENUS[user?.role] || [];
+  const location = useLocation();
+  const roleKey = normalizeRoleKey(user?.role);
+  const menuItems = ROLE_MENUS[roleKey] || [];
+  const [openMap, setOpenMap] = useState({});
+
+  useEffect(() => {
+    if (collapsed) return;
+    // Auto-open the group that contains the current route.
+    const match = menuItems.find((g) => g.children.some((c) => location.pathname === c.path));
+    if (!match) return;
+    setOpenMap((prev) => ({ ...prev, [match.label]: true }));
+  }, [collapsed, location.pathname, menuItems]);
+
+  const filteredMenuItems = menuItems;
 
   const handleLogout = async () => {
     await logout();
@@ -402,17 +419,12 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
   return (
     <aside
-      className="flex flex-col h-screen bg-white border-r border-gray-100 shadow-sm transition-all duration-300"
+      className="flex flex-col h-screen border-r border-gray-100 shadow-sm transition-all duration-300"
       style={{ width: collapsed ? '72px' : '256px', minWidth: collapsed ? '72px' : '256px' }}
     >
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white via-white to-blue-50" />
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow"
-          style={{ background: 'linear-gradient(135deg, #1d4ed8, #0d6ebd)' }}>
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        </div>
         {!collapsed && (
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-bold text-gray-800 truncate">Natik Hospital</p>
@@ -430,18 +442,19 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         </button>
       </div>
 
-      {/* User info */}
-      {!collapsed && (
-        <div className="mx-3 mt-4 mb-2 p-3 rounded-2xl" style={{ background: '#eff6ff' }}>
-          <p className="text-xs font-bold text-blue-800 truncate">{user?.name}</p>
-          <p className="text-xs text-blue-500 mt-0.5">{ROLE_LABELS[user?.role]}</p>
-        </div>
-      )}
-
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1">
-        {menuItems.map((item) => (
-          <MenuItem key={item.label} item={item} collapsed={collapsed} />
+      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-2">
+        {filteredMenuItems.map((item) => (
+          <MenuItem
+            key={item.label}
+            item={item}
+            collapsed={collapsed}
+            open={!!openMap[item.label]}
+            onToggle={() => setOpenMap((prev) => ({ ...prev, [item.label]: !prev[item.label] }))}
+            onNavigate={() => {
+              if (window.innerWidth < 1024) setCollapsed(true);
+            }}
+          />
         ))}
       </nav>
 
