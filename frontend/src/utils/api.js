@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const api = axios.create({ baseURL: '/api' });
+const envBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const baseURL = envBase ? `${envBase}/api` : '/api';
+
+const api = axios.create({ baseURL });
 
 // Attach access token to every request automatically
 api.interceptors.request.use((config) => {
@@ -9,24 +12,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// If access token expires (401), try refreshing it silently
+// If token is invalid/expired, force re-login
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
-    const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true;
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const res = await axios.post('/api/auth/refresh', { refreshToken });
-        const newToken = res.data.accessToken;
-        localStorage.setItem('accessToken', newToken);
-        original.headers.Authorization = `Bearer ${newToken}`;
-        return api(original);
-      } catch {
-        localStorage.clear();
-        window.location.href = '/login';
-      }
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
