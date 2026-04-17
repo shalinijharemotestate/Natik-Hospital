@@ -16,19 +16,16 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
-    const { accessToken, refreshToken, user } = res.data;
+  const login = async (email, password, role) => {
+    const res = await api.post('/auth/login', { email, password, role });
+    const { accessToken, user } = res.data;
     localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
     setUser(user);
     return user;
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    try { await api.post('/auth/logout', { refreshToken }); } catch {}
     localStorage.clear();
     setUser(null);
   };

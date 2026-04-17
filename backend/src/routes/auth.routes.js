@@ -1,12 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const { login, refresh, logout, logoutAll, getMe } = require('../controllers/auth.controller');
-const { authenticate } = require('../middleware/auth.middleware');
+const { body } = require('express-validator');
+const { login } = require('../controllers/auth.controller');
+const { validateRequest } = require('../middleware/validateRequest');
 
-router.post('/login', login);
-router.post('/refresh', refresh);
-router.post('/logout', logout);
-router.post('/logout-all', authenticate, logoutAll);
-router.get('/me', authenticate, getMe);
+router.post(
+  '/login',
+  [
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('password').isString().isLength({ min: 6 }).withMessage('Password is required'),
+    body('role')
+      .isIn([
+        'SUPER_ADMIN',
+        'DOCTOR',
+        'NURSE',
+        'RECEPTIONIST',
+        'PHARMACIST',
+        'LAB_TECHNICIAN',
+        'HR_MANAGER',
+      ])
+      .withMessage('Valid role is required'),
+  ],
+  validateRequest,
+  login
+);
 
 module.exports = router;

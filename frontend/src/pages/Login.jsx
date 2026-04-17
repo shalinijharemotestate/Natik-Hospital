@@ -13,6 +13,11 @@ const ROLES = [
   { value: 'hr_manager', label: 'HR Manager', icon: '👥' },
 ];
 
+const toBackendRole = (role) => {
+  if (!role) return role;
+  return role.toUpperCase();
+};
+
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -43,7 +48,7 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      const user = await login(form.email, form.password);
+      const user = await login(form.email, form.password, toBackendRole(selectedRole));
       navigate(getDashboardPath(user.role));
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
