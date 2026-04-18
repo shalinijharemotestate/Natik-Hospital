@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   MdDashboard, MdPeople, MdCalendarToday, MdLocalHospital,
@@ -256,25 +256,43 @@ const ROLE_LABELS = {
 };
 
 function MenuItem({ item, collapsed }) {
-  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
   const Icon = item.icon;
+
+  // Auto-open if any child path matches current URL
+  const isActive = item.children.some(c => location.pathname.startsWith(c.path));
+  const [open, setOpen] = useState(isActive);
+
+  const handleClick = () => {
+    if (item.children.length === 1) {
+      // Single child — navigate directly
+      navigate(item.children[0].path);
+    } else {
+      setOpen(o => !o);
+    }
+  };
 
   return (
     <div>
       <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 hover:bg-blue-700 hover:text-white transition-all duration-150 group"
+        onClick={handleClick}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group ${
+          isActive ? 'bg-blue-700 text-white' : 'text-blue-100 hover:bg-blue-700 hover:text-white'
+        }`}
       >
-        <Icon className="w-5 h-5 shrink-0 text-blue-300 group-hover:text-white" />
+        <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-blue-300 group-hover:text-white'}`} />
         {!collapsed && (
           <>
             <span className="flex-1 text-left truncate">{item.label}</span>
-            {open ? <MdExpandLess className="w-4 h-4 shrink-0" /> : <MdExpandMore className="w-4 h-4 shrink-0" />}
+            {item.children.length > 1 && (
+              open ? <MdExpandLess className="w-4 h-4 shrink-0" /> : <MdExpandMore className="w-4 h-4 shrink-0" />
+            )}
           </>
         )}
       </button>
 
-      {open && !collapsed && (
+      {open && !collapsed && item.children.length > 1 && (
         <div className="ml-4 mt-0.5 mb-1 border-l border-blue-600 pl-3 space-y-0.5">
           {item.children.map((child) => (
             <NavLink
@@ -301,7 +319,8 @@ function MenuItem({ item, collapsed }) {
 export default function Sidebar({ collapsed, setCollapsed }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const menuItems = ROLE_MENUS[user?.role] || [];
+  const normalizedRole = user?.role ? String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_') : '';
+  const menuItems = ROLE_MENUS[normalizedRole] || [];
 
   const handleLogout = async () => {
     await logout();
@@ -345,7 +364,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
             </div>
             <div className="overflow-hidden">
               <p className="text-xs font-bold text-white truncate">{user?.name}</p>
-              <p className="text-xs text-blue-300 truncate">{ROLE_LABELS[user?.role]}</p>
+              <p className="text-xs text-blue-300 truncate">{ROLE_LABELS[normalizedRole]}</p>
             </div>
           </div>
         </div>

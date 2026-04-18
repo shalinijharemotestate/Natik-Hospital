@@ -5,7 +5,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminRoutes from './pages/admin/AdminRoutes';
-import ReceptionDashboard from './pages/receptionist/ReceptionDashboard';
+import ReceptionRoutes from './pages/receptionist/ReceptionRoutes';
 
 const ComingSoon = ({ page }) => (
   <div className="p-8 flex items-center justify-center h-full">
@@ -31,9 +31,9 @@ export default function App() {
         } />
 
         {/* Receptionist */}
-        <Route path="/dashboard/reception" element={
+        <Route path="/dashboard/reception/*" element={
           <ProtectedRoute allowedRoles={['receptionist', 'super_admin']}>
-            <Layout><ReceptionDashboard /></Layout>
+            <Layout><ReceptionRoutes /></Layout>
           </ProtectedRoute>
         } />
 
