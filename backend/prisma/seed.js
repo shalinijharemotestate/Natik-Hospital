@@ -31,6 +31,30 @@ async function main() {
 
   // eslint-disable-next-line no-console
   console.log(`Seeded SUPER_ADMIN: ${email}`);
+
+  const receptionistEmail = 'receptionist@natik.local';
+  const receptionistPassword = 'Receptionist@123';
+  const receptionistHashed = await bcrypt.hash(receptionistPassword, 12);
+
+  await prisma.user.upsert({
+    where: { email: receptionistEmail },
+    update: {
+      name: 'Default Receptionist',
+      password: receptionistHashed,
+      role: 'RECEPTIONIST',
+      isActive: true,
+    },
+    create: {
+      name: 'Default Receptionist',
+      email: receptionistEmail,
+      password: receptionistHashed,
+      role: 'RECEPTIONIST',
+      isActive: true,
+    },
+  });
+
+  // eslint-disable-next-line no-console
+  console.log(`Seeded RECEPTIONIST: ${receptionistEmail}`);
 }
 
 main()
